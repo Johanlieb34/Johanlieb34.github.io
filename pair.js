@@ -15,9 +15,8 @@ https://t.me/johanlieb35
 https://whatsapp.com/channel/0029Vail87sIyPtQoZ2egl1h
 
 
-*Yᴏᴜ-ᴛᴜʙᴇ ᴛᴜᴛᴏʀɪᴀʟꜱ* 🪄 
-https://youtube.com/GlobalTechInfo
-
+*Yᴏᴜ-ᴛᴜʙᴇ ᴛᴜᴛᴏʀɪᴀʟꜱ* 🎉
+https://youtube.com/@almightyk1ngj0han
 *TOJI-MD--WHATTSAPP-BOT* 🍼
 `;
 
