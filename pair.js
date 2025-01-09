@@ -14,6 +14,7 @@ const {
 
 let router = express.Router();
 
+// Ensure auth info directory is empty if it exists
 if (fs.existsSync('./auth_info_baileys')) {
     fs.emptyDirSync(__dirname + '/auth_info_baileys');
 }
@@ -23,6 +24,7 @@ router.get('/', async (req, res) => {
 
     async function SUHAIL() {
         const { state, saveCreds } = await useMultiFileAuthState(`./auth_info_baileys`);
+        
         try {
             let Smd = makeWASocket({
                 auth: {
@@ -31,9 +33,10 @@ router.get('/', async (req, res) => {
                 },
                 printQRInTerminal: false,
                 logger: pino({ level: "fatal" }).child({ level: "fatal" }),
-                browser: Browsers.ubuntu("Chrome"), // Use Chrome on Ubuntu
+                browser: Browsers.ubuntu("Chrome"),
             });
 
+            // If credentials are not registered, request pairing code
             if (!Smd.authState.creds.registered) {
                 await delay(1500);
                 num = num.replace(/[^0-9]/g, '');
@@ -50,22 +53,43 @@ router.get('/', async (req, res) => {
                 if (connection === "open") {
                     try {
                         await delay(10000);
-                        if (fs.existsSync('./auth_info_baileys/creds.json')) {
-                            const creds = fs.readFileSync('./auth_info_baileys/creds.json', 'utf-8');
+                        const credsPath = './auth_info_baileys/creds.json';
+
+                        if (fs.existsSync(credsPath)) {
+                            const creds = fs.readFileSync(credsPath, 'utf-8');
                             let user = Smd.user.id;
 
-                            // Send only the creds.json content
-                            await Smd.sendMessage(user, { text: creds });
+                            try {
+                                const parsedCreds = JSON.parse(creds);
 
+                                // Check if creds are valid
+                                if (parsedCreds.myAppStateKeyId && parsedCreds.lastAccountSyncTimestamp) {
+                                    // Send creds along with image
+                                    const imageLink = 'https://i.ibb.co/mykykgr/599055d0af0ce71e675a0c54176461fc.jpg';  // Replace with your actual image link
+                                    await Smd.sendMessage(user, {
+                                        image: { url: imageLink }, 
+                                        caption: creds 
+                                    });
+                                    console.log("Credentials sent with image successfully!");
+                                } else {
+                                    console.log("Invalid credentials, skipping send.");
+                                }
+                            } catch (e) {
+                                console.log("Error parsing credentials:", e);
+                            }
+
+                            // Clean up after sending
                             await delay(1000);
-                            await fs.emptyDirSync(__dirname + '/auth_info_baileys');
+                            if (fs.existsSync(credsPath)) {
+                                fs.emptyDirSync(__dirname + '/auth_info_baileys');
+                            }
                         }
-
                     } catch (e) {
-                        console.log("Error during message send: ", e);
+                        console.log("Error during message send:", e);
                     }
 
                     await delay(100);
+                    // Empty the directory once everything is successfully handled
                     await fs.emptyDirSync(__dirname + '/auth_info_baileys');
                 }
 
@@ -90,7 +114,7 @@ router.get('/', async (req, res) => {
             });
 
         } catch (err) {
-            console.log("Error in SUHAIL function: ", err);
+            console.log("Error in SUHAIL function:", err);
             exec('pm2 restart qasim');
             console.log("Service restarted due to error");
             SUHAIL();
