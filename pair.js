@@ -8,7 +8,7 @@ const MESSAGE = process.env.MESSAGE || `
 *SESSION GENERATED SUCCESSFULY* ✅
 
 *꧁༺ӄɨռɢ ʝօɦǟռ༻꧂🗽⃢⃢🗿* 🌟
-https://github.com/Johanlieb34/TojiMd
+https://github.com/Johanlieb34/KIWIMD
 
 *꧁༺ӄɨռɢ ʝօɦǟռ༻꧂🗽⃢⃢🗿* 💭
 https://t.me/johanlieb35
@@ -16,7 +16,7 @@ https://whatsapp.com/channel/0029Vail87sIyPtQoZ2egl1h
 
 *Yᴏᴜ-ᴛᴜʙᴇ ᴛᴜᴛᴏʀɪᴀʟꜱ* 🎉
 https://youtube.com/@almightyk1ngj0han
-*TOJI-MD--WHATTSAPP-BOT* 🍼
+*KWI💕-MD--WHATTSAPP-BOT* 🍼
 `;
 
 const {
