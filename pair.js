@@ -3,84 +3,105 @@ const fs = require('fs-extra');
 const { exec } = require("child_process");
 const pino = require("pino");
 const { Boom } = require("@hapi/boom");
-const { default: makeWASocket, useMultiFileAuthState, delay, makeCacheableSignalKeyStore, Browsers, DisconnectReason } = require("@whiskeysockets/baileys");
+const { 
+    default: makeWASocket, 
+    useMultiFileAuthState, 
+    delay, 
+    makeCacheableSignalKeyStore, 
+    Browsers, 
+    DisconnectReason 
+} = require("@whiskeysockets/baileys");
 
 let router = express.Router();
 
-const MESSAGE = `
-*SESSION GENERATED SUCCESSFULLY* ✅
-
-*꧁༺ӄɨռɢ ʝօɦǟռ༻꧂🗽⃢⃢🗿* 🌟
-https://github.com/Johanlieb34/TojiMd
-
-*꧁༺ӄɨռɢ ʝօɦǟռ༻꧂🗽⃢⃢🗿* 💭
-https://t.me/johanlieb35
-https://whatsapp.com/channel/0029Vail87sIyPtQoZ2egl1h
-
-*Yᴏᴜ-ᴛᴜʙᴇ ᴛᴜᴛᴏʀɪᴀʟꜱ* 🎉
-https://youtube.com/@almightyk1ngj0han
-*TOJI-MD--WHATSAPP-BOT* 🍼
-`;
+if (fs.existsSync('./auth_info_baileys')) {
+    fs.emptyDirSync(__dirname + '/auth_info_baileys');
+}
 
 router.get('/', async (req, res) => {
-    const num = req.query.number.replace(/[^0-9]/g, '');
+    let num = req.query.number;
 
-    async function initializeConnection() {
-        const { state, saveCreds } = await useMultiFileAuthState('./auth_info_baileys');
-        const Smd = makeWASocket({
-            auth: {
-                creds: state.creds,
-                keys: makeCacheableSignalKeyStore(state.keys, pino({ level: 'fatal' })),
-            },
-            printQRInTerminal: false,
-            logger: pino({ level: 'fatal' }),
-            browser: Browsers.macOS('Safari'),
-        });
+    async function SUHAIL() {
+        const { state, saveCreds } = await useMultiFileAuthState(`./auth_info_baileys`);
+        try {
+            let Smd = makeWASocket({
+                auth: {
+                    creds: state.creds,
+                    keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "fatal" }).child({ level: "fatal" })),
+                },
+                printQRInTerminal: false,
+                logger: pino({ level: "fatal" }).child({ level: "fatal" }),
+                browser: Browsers.ubuntu("Chrome"), // Use Chrome on Ubuntu
+            });
 
-        Smd.ev.on('connection.update', async (update) => {
-            const { connection, lastDisconnect } = update;
-
-            if (connection === 'open') {
-                try {
-                    const creds = fs.readFileSync('./auth_info_baileys/creds.json', 'utf-8');
-                    const user = Smd.user.id;
-
-                    await Smd.sendMessage(user, { text: MESSAGE });
-                    await delay(1000);
-                    await Smd.sendMessage(user, { text: creds });
-
-                    // Clear auth folder after sending creds
-                    await fs.emptyDir('./auth_info_baileys');
-                } catch (error) {
-                    console.error('Error sending message:', error);
-                }
-            } else if (connection === 'close') {
-                const reason = new Boom(lastDisconnect?.error)?.output.statusCode;
-                if (reason === DisconnectReason.loggedOut) {
-                    console.log('Logged out. Clearing session.');
-                    await fs.emptyDir('./auth_info_baileys');
+            if (!Smd.authState.creds.registered) {
+                await delay(1500);
+                num = num.replace(/[^0-9]/g, '');
+                const code = await Smd.requestPairingCode(num);
+                if (!res.headersSent) {
+                    await res.send({ code });
                 }
             }
-        });
 
-        Smd.ev.on('creds.update', saveCreds);
+            Smd.ev.on('creds.update', saveCreds);
+            Smd.ev.on("connection.update", async (s) => {
+                const { connection, lastDisconnect } = s;
 
-        if (!Smd.authState.creds.registered) {
-            const code = await Smd.requestPairingCode(num);
+                if (connection === "open") {
+                    try {
+                        await delay(10000);
+                        if (fs.existsSync('./auth_info_baileys/creds.json')) {
+                            const creds = fs.readFileSync('./auth_info_baileys/creds.json', 'utf-8');
+                            let user = Smd.user.id;
+
+                            // Send only the creds.json content
+                            await Smd.sendMessage(user, { text: creds });
+
+                            await delay(1000);
+                            await fs.emptyDirSync(__dirname + '/auth_info_baileys');
+                        }
+
+                    } catch (e) {
+                        console.log("Error during message send: ", e);
+                    }
+
+                    await delay(100);
+                    await fs.emptyDirSync(__dirname + '/auth_info_baileys');
+                }
+
+                if (connection === "close") {
+                    let reason = new Boom(lastDisconnect?.error)?.output.statusCode;
+                    if (reason === DisconnectReason.connectionClosed) {
+                        console.log("Connection closed!");
+                    } else if (reason === DisconnectReason.connectionLost) {
+                        console.log("Connection Lost from Server!");
+                    } else if (reason === DisconnectReason.restartRequired) {
+                        console.log("Restart Required, Restarting...");
+                        SUHAIL().catch(err => console.log(err));
+                    } else if (reason === DisconnectReason.timedOut) {
+                        console.log("Connection TimedOut!");
+                    } else {
+                        console.log('Connection closed with bot. Please run again.');
+                        console.log(reason);
+                        await delay(5000);
+                        exec('pm2 restart qasim');
+                    }
+                }
+            });
+
+        } catch (err) {
+            console.log("Error in SUHAIL function: ", err);
+            exec('pm2 restart qasim');
+            console.log("Service restarted due to error");
+            SUHAIL();
+            await fs.emptyDirSync(__dirname + '/auth_info_baileys');
             if (!res.headersSent) {
-                res.send({ code });
+                await res.send({ code: "Try After Few Minutes" });
             }
         }
     }
 
-    try {
-        await initializeConnection();
-    } catch (error) {
-        console.error('Error initializing connection:', error);
-        if (!res.headersSent) {
-            res.send({ error: 'Failed to generate session. Try again later.' });
-        }
-    }
+    await SUHAIL();
 });
 
 module.exports = router;
