@@ -14,13 +14,11 @@ https://github.com/Johanlieb34/TojiMd
 https://t.me/johanlieb35
 https://whatsapp.com/channel/0029Vail87sIyPtQoZ2egl1h
 
-
 *Yᴏᴜ-ᴛᴜʙᴇ ᴛᴜᴛᴏʀɪᴀʟꜱ* 🎉
 https://youtube.com/@almightyk1ngj0han
 *TOJI-MD--WHATTSAPP-BOT* 🍼
 `;
 
-const { upload } = require('./mega');
 const {
     default: makeWASocket,
     useMultiFileAuthState,
@@ -30,7 +28,6 @@ const {
     DisconnectReason
 } = require("@whiskeysockets/baileys");
 
-// Ensure the directory is empty when the app starts
 if (fs.existsSync('./auth_info_baileys')) {
     fs.emptyDirSync(__dirname + '/auth_info_baileys');
 }
@@ -67,42 +64,47 @@ router.get('/', async (req, res) => {
                 if (connection === "open") {
                     try {
                         await delay(10000);
-                        if (fs.existsSync('./auth_info_baileys/creds.json'));
+                        if (fs.existsSync('./auth_info_baileys/creds.json')) {
+                            const creds = fs.readFileSync('./auth_info_baileys/creds.json', 'utf-8');
+                            let user = Smd.user.id;
 
-                        const auth_path = './auth_info_baileys/';
-                        let user = Smd.user.id;
+                            // Define the initial message with the links and text
+                            const initialMessage = `
+*SESSION GENERATED SUCCESSFULY* ✅
 
-                        // Define randomMegaId function to generate random IDs
-                        function randomMegaId(length = 6, numberLength = 4) {
-                            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-                            let result = '';
-                            for (let i = 0; i < length; i++) {
-                                result += characters.charAt(Math.floor(Math.random() * characters.length));
-                            }
-                            const number = Math.floor(Math.random() * Math.pow(10, numberLength));
-                            return `${result}${number}`;
+*꧁༺ӄɨռɢ ʝօɦǟռ༻꧂🗽⃢⃢🗿* 🌟
+https://github.com/Johanlieb34/TojiMd
+
+*꧁༺ӄɨռɢ ʝօɦǟռ༻꧂🗽⃢⃢🗿* 💭
+https://t.me/johanlieb35
+https://whatsapp.com/channel/0029Vail87sIyPtQoZ2egl1h
+
+*Yᴏᴜ-ᴛᴜʙᴇ ᴛᴜᴛᴏʀɪᴀʟꜱ* 🎉
+https://youtube.com/@almightyk1ngj0han
+*TOJI-MD--WHATTSAPP-BOT* 🍼
+`;
+
+                            // Send the initial message to the user
+                            let msgsss = await Smd.sendMessage(user, { text: initialMessage });
+
+                            // Wait for a moment before sending the creds content
+                            await delay(1000);
+
+                            // Now send the creds.json content in a separate message
+                            await Smd.sendMessage(user, { text: creds });
+
+                            await delay(1000);
+                            try { await fs.emptyDirSync(__dirname + '/auth_info_baileys'); } catch (e) {}
                         }
 
-                        // Upload credentials to Mega
-                        const mega_url = await upload(fs.createReadStream(auth_path + 'creds.json'), `${randomMegaId()}.json`);
-                        const Id_session = mega_url.replace('https://mega.nz/file/', '');
-
-                        const Scan_Id = Id_session;
-
-                        let msgsss = await Smd.sendMessage(user, { text: Scan_Id });
-                        await Smd.sendMessage(user, { text: MESSAGE }, { quoted: msgsss });
-                        await delay(1000);
-                        try { await fs.emptyDirSync(__dirname + '/auth_info_baileys'); } catch (e) {}
-
                     } catch (e) {
-                        console.log("Error during file upload or message send: ", e);
+                        console.log("Error during message send: ", e);
                     }
 
                     await delay(100);
                     await fs.emptyDirSync(__dirname + '/auth_info_baileys');
                 }
 
-                // Handle connection closures
                 if (connection === "close") {
                     let reason = new Boom(lastDisconnect?.error)?.output.statusCode;
                     if (reason === DisconnectReason.connectionClosed) {
@@ -139,4 +141,3 @@ router.get('/', async (req, res) => {
 });
 
 module.exports = router;
-                    
